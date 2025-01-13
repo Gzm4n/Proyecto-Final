@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 # Define zones and date range
 zones = ["Tumbaco", "La Carolina", "Cumbaya", "San Rafael", "San Isidro"]
-start_date = datetime(2024, 12, 13)
+start_date = datetime(2024, 12, 18)
 num_days = 30
 
 # Random value generator within a range
