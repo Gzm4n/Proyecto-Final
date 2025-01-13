@@ -13,6 +13,12 @@ void getString(char string[15]){
 
 }
 
+void mayus(char string[15]){
+    if (string[0] != '\0' && islower(string[0])) {
+        string[0] = toupper(string[0]);
+    }
+}
+
 
 bool checkZona(char zona[15]){
     for (int i=0; i<10; i++){
@@ -23,8 +29,7 @@ bool checkZona(char zona[15]){
     return false;
 }
 
-void dateValid(){
-    char date[10];
+char getDate(char date[10]){
     printf("Ingrese la fecha en formato YYYY/MM/DD: ");
     getString(date);
     if (strlen(date)!=10){
@@ -46,10 +51,11 @@ void dateValid(){
         printf("Fecha invalida, ingrese la fecha en formato YYYY/MM/DD: ");
         getString(date);
     }
+    return date;
 }
 
 void getDiaActual(struct info info){
-    printf("Ingrese la zona cuya informacion desea ingresar: ");
+    printf("Ingrese el nombre de la zona: ");
     getString(info.zona);
     while (!checkZona(info.zona)){
         printf("Zona no encontrada, ingrese una de las siguientes zonas\n");
@@ -59,6 +65,8 @@ void getDiaActual(struct info info){
         printf("\nIngrese: ");
         getString(info.zona);
     }
+    
+    mayus(info.zona);
 
     printf("Ingrese la temperatura: ");
     scanf("%f", &info.temp);
@@ -74,10 +82,5 @@ void getDiaActual(struct info info){
     scanf("%f", &info.so2);
     printf("Ingrese la concentracion de CO2: ");
     scanf("%f", &info.co2);
-    printf("Ingrese la fecha en formato YYYY/MM/DD: ");
-    getString(info.date);
-    if (strlen(info.date)!=10){
-        printf("Fecha invalida, ingrese la fecha en formato YYYY/MM/DD: ");
-        getString(info.date);
-    }
+    getDate(info.date);
 }

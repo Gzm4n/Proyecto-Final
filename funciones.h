@@ -13,5 +13,5 @@ struct info{
 
 #define max 5
 
-extern const char zonas[10][15] = {"Tumbaco", "La Carolina", "Cumbaya", "San Rafael", "San Isidro", "tumbaco", "la carolina", "cumbaya", "san rafael", "san isidro"};
+extern const char zonas[10][15] = {"Tumbaco", "Jipijapa", "Cumbaya", "Chillogallo", "Sangolqui", "tumbaco", "jipijapa", "cumbaya", "chillogallo", "sangolqui"};
 
