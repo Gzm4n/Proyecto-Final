@@ -30,6 +30,12 @@ void mayus(char string[15]){
     }
 }
 
+void openFileError(FILE *file){
+    if (file == NULL){
+        printf("Error al abrir el archivo\n");
+        return;
+    }
+}
 
 bool checkZona(char zona[15]){
     for (int i=0; i<10; i++){
@@ -52,10 +58,7 @@ char getDate(char date[10]){
 
 void updateData(const char *filename, struct Info *info){
     FILE *file = fopen(filename, "a");
-    if (file == NULL){
-        printf("Error al abrir el archivo\n");
-        return;
-    }
+    openFileError(file);
     fprintf(file, "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s\n", info->co2, info->so2, info->no2, info->pm25, info->temp, info->wind, info->hum, info->date);
     fclose(file);
     printf("Datos guardados correctamente\n");
@@ -104,6 +107,51 @@ void getDiaActual(struct Info *info, const char *filename){
     }
     updateData(*filename, info);
 }
+
+int getIndex(char array[15], char matrix[5][15]){
+    for (int i=0; i<5; i++){
+        if (strcmp(array, matrix[i])==0) return i;
+    }
+}
+
+void monitorActual(const char *filename){
+    char zona[15];
+    int index;
+    while(1){
+        printf("Ingrese la zona que desea monitorear: ");
+        getString(zona);
+        mayus(zona);
+        if (!checkZona(zona)){
+            printf("Zona invalida, ingrese una de las siguientes zonas: Calderon, Cumbaya, Pifo, Tababela, Tumbaco\n");
+            continue;
+        }
+        break;
+    }
+    index=getIndex(zona, zonas);
+    switch(index){
+        case 0:
+            FILE *file = fopen("Data/calderon.csv", "r");
+            openFileError(file);
+            break;
+        case 1:
+            FILE *file = fopen("Data/cumbaya.csv", "r");
+            openFileError(file);
+            break;
+        case 2:
+            FILE *file = fopen("Data/pifo.csv", "r");
+            openFileError(file);
+            break;
+        case 3:
+            FILE *file = fopen("Data/tababela.csv", "r");
+            openFileError(file);
+            break;
+        case 4:
+            FILE *file = fopen("Data/tumbaco.csv", "r");
+            openFileError(file);
+            break;
+    }
+
+
 
 
 
