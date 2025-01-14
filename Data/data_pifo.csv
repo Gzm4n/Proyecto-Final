@@ -1,4 +1,5 @@
 PIFO
+
 CO2(ppm),SO2(ppb),NO2(ppb),PM2.5(ug/m^3),Temperatura(Celsius),VelocidadViento(km/h),Humedad(%),Fecha(YYYY-MM-DD)
 391.4,4.2,18.9,49.2,39.2,39.1,31.7,2024-12-21
 389.0,4.7,27.3,6.0,32.6,28.2,56.2,2024-12-22

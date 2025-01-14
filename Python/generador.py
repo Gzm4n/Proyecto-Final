@@ -23,6 +23,7 @@ for day in range(num_days):
 with open("data_calderon.csv", "w", newline="") as file:
     writer = csv.writer(file)
     writer.writerow(["CALDERON"])
+    writer.writerow([""])
     writer.writerow(["CO2(ppm)", "SO2(ppb)", "NO2(ppb)", "PM2.5(ug/m^3)", "Temperatura(Celsius)", "VelocidadViento(km/h)", "Humedad(%)", "Fecha(YYYY-MM-DD)"])
     writer.writerows(data)
 

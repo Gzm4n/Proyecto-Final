@@ -1,4 +1,5 @@
 TUMBACO
+
 CO2(ppm),SO2(ppb),NO2(ppb),PM2.5(ug/m^3),Temperatura(Celsius),VelocidadViento(km/h),Humedad(%),Fecha(YYYY-MM-DD)
 403.9,18.7,44.9,55.6,18.8,9.5,44.2,2024-12-21
 400.0,3.8,42.6,37.3,8.9,8.0,58.9,2024-12-22
