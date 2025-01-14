@@ -1,6 +1,5 @@
 
-struct info{
-    char zona[15];
+struct Info{
     float co2;
     float so2;
     float no2;
@@ -11,7 +10,4 @@ struct info{
     char date[10];
 };
 
-#define max 5
-
-extern const char zonas[10][15] = {"Tumbaco", "Jipijapa", "Cumbaya", "Chillogallo", "Sangolqui", "tumbaco", "jipijapa", "cumbaya", "chillogallo", "sangolqui"};
-
+extern const char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
