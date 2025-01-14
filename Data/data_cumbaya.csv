@@ -1,5 +1,4 @@
-CUMBAYA
-
+CUMBAYA, , , , , , , 
 CO2(ppm),SO2(ppb),NO2(ppb),PM2.5(ug/m^3),Temperatura(Celsius),VelocidadViento(km/h),Humedad(%),Fecha(YYYY-MM-DD)
 441.5,0.0,59.2,21.9,8.4,5.0,58.2,2024-12-21
 417.5,5.9,50.8,41.4,-7.2,38.6,45.6,2024-12-22
