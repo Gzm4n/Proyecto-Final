@@ -1,27 +1,29 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include "funciones.h"
  
-void getString(char string[15]){
-    int c;
+void getString(char string[15], int length){
     while (getchar()!='\n');
-    fgets(string, sizeof(string), stdin);
+    fgets(string, length, stdin);
     string[strcspn(string, "\n")]='\0';
 
 }
 
-void validNumData(float *data, int min, int max){
+void validNumData(float *data, float min, float max){
     scanf("%f", &data);
-    while (data<min || data>max || data!=1){
-        if (data!=1){
+    float aux = *data;
+    while (aux<min || aux>max || !aux){
+        if (!aux){
             while (getchar()!='\n');
         }
         printf("Dato invalido, ingrese un numero entre %d y %d: ", min, max);
-        scanf("%f", &data);
+        scanf("%f", &aux);
     }
+    *data = aux;
 }
 
 void mayus(char string[15]){
@@ -46,14 +48,17 @@ bool checkZona(char zona[15]){
     return false;
 }
 
-char getDate(char date[10]){
+void getDate(char *date[10]){
+    char try[10];
     printf("Ingrese la fecha en formato YYYY-MM-DD (Los guiones son importantes): ");
-    getString(date);
-    if (strlen(date)!=10 || date[4]!='-' || date[7]!='-' || atoi(date)>2025 || atoi(date+5)>12 || atoi(date+8)>31){  
-        printf("Fecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
-        getString(date);
-    return date;
+    getString(try, 10);
+    while(1){
+        if (strlen(try)!=10 || try[4]!='-' || try[7]!='-' || atoi(try)>2025 || atoi(try+5)>12 || atoi(try+8)>31){  
+            printf("Fecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
+            getString(try, 10);
+        } else break;
     }
+    strcpy(&date, try);
 }
 
 void updateData(const char *filename, struct Info *info){
@@ -105,37 +110,113 @@ void getDiaActual(struct Info *info, const char *filename){
             printf("Opcion invalida, ingrese un numero entre 1 y 2\n");
         }
     }
-    updateData(*filename, info);
+    updateData(filename, info);
 }
 
-int getIndex(char array[15], char matrix[5][15]){
-    for (int i=0; i<5; i++){
-        if (strcmp(array, matrix[i])==0) return i;
-    }
-}
-
-readLastLine(const char *filename, struct Info *info){
+void readLastLine(const char *filename, struct Info *info, char *line[100]){
     FILE *file = fopen(filename, "r");
     openFileError(file);
-    char line[100];
-    fseek(file, 0, SEEK_END);
+
+    fseek(file, 0, SEEK_END); // Ir al final del archivo
     long pos = ftell(file);
     while(pos>0){
         fseek(file, --pos, SEEK_SET);
         if (fgetc(file)=='\n') break;
     }
-    fgets(line, sizeof(line), file);
+    if (fgets(&line, 100, file)!=NULL){
+        if (sscanf(&line, "%f,%f,%f,%f,%f,%f,%f,%s", &info->co2, &info->so2, &info->no2, &info->pm25, &info->temp, &info->wind, &info->hum, info->date)!=8){
+            printf("Ocurrio un error\n");
+            fclose(file);
+            return;
+        }
+    } else{ 
+        printf("Ocurrio un error en el archivo.\n");
+        fclose(file);
+        return;
+    }
     fclose(file);
-
-    
 }
 
-void monitorActual(const char *filename){
-    char zona[15];
+float calcApiSubIndex(float cp, float clow, float chigh, float ilow, float ihigh){
+    return ((ihigh-ilow)/(chigh-clow))*(cp-clow)+ilow;
+}
+
+float getApiSubIndex(float val, const float breakpoints[6][4]){
+    for (int i=0; i<6; i++){
+        if (val>=breakpoints[i][0] && val<=breakpoints[i][1]){
+            return calcApiSubIndex(val, breakpoints[i][0], breakpoints[i][1], breakpoints[i][2], breakpoints[i][3]);
+        }
+    }
+    return 0.0;
+}
+
+float calcAPI(struct Info *info){
+    float temp;
+    
+    float co2Index = getApiSubIndex(info->co2, co2Breakpoints);
+    float so2Index = getApiSubIndex(info->so2, so2Breakpoints);
+    float no2Index = getApiSubIndex(info->no2, no2Breakpoints);
+    float pm25Index = getApiSubIndex(info->pm25, pm25Breakpoints);
+
+    float api = co2Index;
+    if (so2Index>api) api = so2Index;
+    if (no2Index>api) api = no2Index;
+    if (pm25Index>api) api = pm25Index;
+
+    //Ajustarse  a condiciones climaticas
+
+    if (info->temp>40 || info->temp<0){
+        temp = 10;
+    } else temp= 0; 
+    float wind= 1 - (info->wind/50);
+    if (wind<0.5) wind=0.5;
+    float humidity= 1 + (info->hum/100);
+
+    return api * temp * wind * humidity;
+}
+
+void printMA(float api){
+    printf("El indice de calidad del aire es: %.2f\n", api);
+    if (api>=0 && api<=50){
+        printf("Calidad del aire: Buena\n");
+    } else if (api>=51 && api<=100){
+        printf("Calidad del aire: Moderada\n");
+    } else if (api>=101 && api<=150){
+        printf("Calidad del aire: Danina para grupos sensibles\n");
+    } else if (api>=151 && api<=200){
+        printf("Calidad del aire: Danina para la salud\n");
+    } else if (api>=201 && api<=300){
+        printf("Calidad del aire: Muy danina para la salud\n");
+    } else if (api>=301 && api<=500){
+        printf("Calidad del aire: Peligrosa\n");
+    } else{
+        printf("Error\n");
+    }
+}
+
+int getSwitchIndex(char zona[15], const char zonas[5][15]){
+    for (int i=0; i<5; i++){
+        if (strcmp(zona, zonas[i])==0){
+            return i;
+        }
+    }
+}
+
+void maSwitchCase(const char *filename, struct Info *info, char *line[100], float api){ //Funcion para el menu de monitorActual
+    FILE *file = fopen(filename, "r");
+    openFileError(filename);
+    readLastLine(filename, info, line);
+    api=calcAPI(info);
+    printMA(api);
+}
+
+void monitorActual(struct Info *info){
+    char zona[15], line[100];
     int index;
+    float api;
     while(1){
         printf("Ingrese la zona que desea monitorear: ");
-        getString(zona);
+        getString(zona, 15);
         mayus(zona);
         if (!checkZona(zona)){
             printf("Zona invalida, ingrese una de las siguientes zonas: Calderon, Cumbaya, Pifo, Tababela, Tumbaco\n");
@@ -143,30 +224,25 @@ void monitorActual(const char *filename){
         }
         break;
     }
-    index=getIndex(zona, zonas);
+    index=getSwitchIndex(zona, zonas);
     switch(index){
         case 0:
-            FILE *file = fopen("Data/calderon.csv", "r");
-            openFileError(file);
+            maSwitchCase("Data/calderon.csv", info, line, api);
             break;
         case 1:
-            FILE *file = fopen("Data/cumbaya.csv", "r");
-            openFileError(file);
+            maSwitchCase("Data/cumbaya.csv", info, line, api);
             break;
         case 2:
-            FILE *file = fopen("Data/pifo.csv", "r");
-            openFileError(file);
+            maSwitchCase("Data/pifo.csv", info, line, api);
             break;
         case 3:
-            FILE *file = fopen("Data/tababela.csv", "r");
-            openFileError(file);
+            maSwitchCase("Data/tababela.csv", info, line, api);
             break;
         case 4:
-            FILE *file = fopen("Data/tumbaco.csv", "r");
-            openFileError(file);
+            maSwitchCase("Data/tumbaco.csv", info, line, api);
             break;
     }
-
+}
 
 
 
