@@ -68,19 +68,19 @@ void getDiaActual(struct Info *info, const char *filename){
     int op;
     while(1){
         printf("Ingrese la cantidad de CO2 en ppm: ");
-        validNumData(&info->co2, 350, 450);
+        validNumData(&info->co2, 350, 6000);
         printf("Ingrese la cantidad de SO2 en ppb: ");
-        validNumData(&info->so2, 0, 20);
+        validNumData(&info->so2, 0, 500);
         printf("Ingrese la cantidad de NO2 en ppb: ");
-        validNumData(&info->no2, 5, 60);
+        validNumData(&info->no2, 0, 300);
         printf("Ingrese la cantidad de PM2.5 en ug/m3: ");
-        validNumData(&info->pm25, 5, 100);
+        validNumData(&info->pm25, 0, 500);
         printf("Ingrese la temperatura en grados Celsius: ");
-        validNumData(&info->temp, -10, 45);
+        validNumData(&info->temp, -10, 50);
         printf("Ingrese la velocidad del viento en km/h: ");
         validNumData(&info->wind, 0, 50);
         printf("Ingrese la humedad en porcentaje: ");
-        validNumData(&info->hum, 20, 90);
+        validNumData(&info->hum, 0, 100);
         printf("Ingrese la fecha en formato YYYY-MM-DD: ");
         getDate(info->date);
         printf("\nLos siguientes datos son correctos?\n"
@@ -112,6 +112,22 @@ int getIndex(char array[15], char matrix[5][15]){
     for (int i=0; i<5; i++){
         if (strcmp(array, matrix[i])==0) return i;
     }
+}
+
+readLastLine(const char *filename, struct Info *info){
+    FILE *file = fopen(filename, "r");
+    openFileError(file);
+    char line[100];
+    fseek(file, 0, SEEK_END);
+    long pos = ftell(file);
+    while(pos>0){
+        fseek(file, --pos, SEEK_SET);
+        if (fgetc(file)=='\n') break;
+    }
+    fgets(line, sizeof(line), file);
+    fclose(file);
+
+    
 }
 
 void monitorActual(const char *filename){
