@@ -5,8 +5,44 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include "funciones.h"
+
+const char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
+
+const float co2Breakpoints[6][4] = {
+    {0.0, 350.0, 0, 50},
+    {351.0, 450.0, 51, 100},
+    {451.0, 700.0, 101, 150},
+    {701.0, 1000.0, 151, 200},
+    {1001.0, 1500.0, 201, 300},
+    {1501.0, 2000.0, 301, 500}
+};
+const float so2Breakpoints[6][4] = {
+    {0.0, 20.0, 0, 50},
+    {20.1, 80.0, 51, 100},
+    {80.1, 365.0, 101, 150},
+    {365.1, 800.0, 151, 200},
+    {800.1, 1600.0, 201, 300},
+    {1600.1, 2100.0, 301, 500}
+};
+const float no2Breakpoints[6][4] = {
+    {0.0, 40.0, 0, 50},
+    {40.1, 80.0, 51, 100},
+    {80.1, 180.0, 101, 150},
+    {180.1, 280.0, 151, 200},
+    {280.1, 400.0, 201, 300},
+    {400.1, 500.0, 301, 500}
+};
+const float pm25Breakpoints[6][4] = {
+    {0.0, 12.0, 0, 50},
+    {12.1, 35.4, 51, 100},
+    {35.5, 55.4, 101, 150},
+    {55.5, 150.4, 151, 200},
+    {150.5, 250.4, 201, 300},
+    {250.5, 500.4, 301, 500}
+};
+
  
-void getString(char string[15], int length){
+void getString(char string[], int length){
     while (getchar()!='\n');
     fgets(string, length, stdin);
     string[strcspn(string, "\n")]='\0';
@@ -48,8 +84,8 @@ bool checkZona(char zona[15]){
     return false;
 }
 
-void getDate(char *date[10]){
-    char try[10];
+void getDate(char *date){
+    char try[11];
     printf("Ingrese la fecha en formato YYYY-MM-DD (Los guiones son importantes): ");
     getString(try, 10);
     while(1){
@@ -58,7 +94,7 @@ void getDate(char *date[10]){
             getString(try, 10);
         } else break;
     }
-    strcpy(&date, try);
+    strcpy(date, try);
 }
 
 void updateData(const char *filename, struct Info *info){
@@ -113,7 +149,7 @@ void getDiaActual(struct Info *info, const char *filename){
     updateData(filename, info);
 }
 
-void readLastLine(const char *filename, struct Info *info, char *line[100]){
+void readLastLine(const char *filename, struct Info *info, char *line){
     FILE *file = fopen(filename, "r");
     openFileError(file);
 
@@ -123,8 +159,8 @@ void readLastLine(const char *filename, struct Info *info, char *line[100]){
         fseek(file, --pos, SEEK_SET);
         if (fgetc(file)=='\n') break;
     }
-    if (fgets(&line, 100, file)!=NULL){
-        if (sscanf(&line, "%f,%f,%f,%f,%f,%f,%f,%s", &info->co2, &info->so2, &info->no2, &info->pm25, &info->temp, &info->wind, &info->hum, info->date)!=8){
+    if (fgets(line, 100, file)!=NULL){
+        if (sscanf(line, "%f,%f,%f,%f,%f,%f,%f,%s", &info->co2, &info->so2, &info->no2, &info->pm25, &info->temp, &info->wind, &info->hum, info->date)!=8){
             printf("Ocurrio un error\n");
             fclose(file);
             return;
@@ -202,9 +238,9 @@ int getSwitchIndex(char zona[15], const char zonas[5][15]){
     }
 }
 
-void maSwitchCase(const char *filename, struct Info *info, char *line[100], float api){ //Funcion para el menu de monitorActual
+void maSwitchCase(const char *filename, struct Info *info, char *line, float api){ //Funcion para el menu de monitorActual
     FILE *file = fopen(filename, "r");
-    openFileError(filename);
+    openFileError(file);
     readLastLine(filename, info, line);
     api=calcAPI(info);
     printMA(api);
@@ -244,6 +280,8 @@ void monitorActual(struct Info *info){
     }
 }
 
-
+void predictTomorrow(){
+    
+}
 
 

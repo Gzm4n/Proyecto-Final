@@ -3,6 +3,7 @@
 
 int main (int argc, char *argv[]) {
 
+    const char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
     struct Info info;
     int op1, op2, f1;
 
@@ -10,13 +11,13 @@ int main (int argc, char *argv[]) {
         printf("Ingrese una de las siguientes opciones: \n"
             "1. Ingresar datos del dia actual\n"
             "2. Monitoreo de contaminacion actual\n"
-            "3. Prediccion de niveles futuros\n"
+            "3. Prediccion de niveles del dia de manana\n"
             "4. Calculo de promedios historicos\n"
             "5. Recomendaciones\n"
             "6. Salir\n"
             ">> ");
         scanf("%d", &op1);
-        if (op1<1 || op1>6){
+        if (op1<1 || op1>5){
             printf("Opcion invalida, ingrese un numero entre 1 y 6\n");
             continue;
         }
@@ -56,8 +57,10 @@ int main (int argc, char *argv[]) {
                         if (op2==1){
                             monitorActual(&info);
                             break;
-                        }else if (op2==2) break;
-                        else{
+                        }else if (op2==2){
+                            printf("Regresando al menu principal\n");
+                            break;
+                        }else{
                         printf("Opcion invalida, ingrese un numero entre 1 y 2\n");
                         continue;
                         }
@@ -65,15 +68,12 @@ int main (int argc, char *argv[]) {
                 }else monitorActual(&info);
                 break;
             case 3:
-                
+                predictTomorrow(); //adds comparation and recommendation
                 break;
             case 4:
-                
+                historicalAverage();
                 break;
             case 5:
-                
-                break;
-            case 6:
                 writeReport();
                 return 0;
         }
