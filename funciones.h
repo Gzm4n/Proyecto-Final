@@ -22,10 +22,10 @@ struct readData{
     float humData[maxData];
 };
 
-void getDiaActual(struct Info *info, const char *filename);
+void getDiaActual(struct Info info, const char *filename);
 void monitorActual(struct Info *info);
 void predictionAlerts();
 void predictTomorrow();
-void historicalAverage();
-void writeReport();
+void historicalAvrgBySearch();
+void writeReport(bool f1, bool f2, bool f3, bool f4, struct Info *info);
 int mainValid(bool f1);

@@ -4,15 +4,16 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <time.h>
 #include "funciones.h"
 
 #define startLine 3 // Linea donde empiezan los datos en los archivos
 
 struct readData data;
 
-const char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
+char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
 
-const char fileNames[5][30]= {"Data/calderon.csv", "Data/cumbaya.csv", "Data/pifo.csv", "Data/tababela.csv", "Data/tumbaco.csv"};
+const char fileNames[5][30]= {"Data/data_calderon.csv", "Data/data_cumbaya.csv", "Data/data_pifo.csv", "Data/data_tababela.csv", "Data/data_tumbaco.csv"};
 
 const float co2Breakpoints[6][4] = {
     {0.0, 350.0, 0, 50},
@@ -48,29 +49,27 @@ const float pm25Breakpoints[6][4] = {
 };
 
 void getString(char string[], int length){
-    while (getchar()!='\n');
     fgets(string, length, stdin);
-    string[strcspn(string, "\n")]='\0';
-
+    string[strcspn(string, "\n")]='\0';   
 }
 
 void validNumData(float *data, float min, float max){
-    scanf("%f", &data);
-    float aux = *data;
-    while (aux<min || aux>max || !aux){
-        if (!aux){
+    int flag=0;
+    float temp=0;
+    while(!flag){
+        if (scanf("%f", &temp)!=1){
             while (getchar()!='\n');
-        }
-        printf("Dato invalido, ingrese un numero entre %d y %d: ", min, max);
-        scanf("%f", &aux);
+            printf("Dato invalido, ingrese un numero entre %.2f y %.2f: ", min, max);
+        } else if (temp<min || temp>max){
+            printf("Dato invalido, ingrese un numero entre %.2f y %.2f: ", min, max);
+        } else flag=1;
     }
-    *data = aux;
+    while(getchar()!='\n');
+    *data=temp;
 }
 
-void mayus(char string[15]){
-    if (string[0] != '\0' && islower(string[0])) {
-        string[0] = toupper(string[0]);
-    }
+void mayus(char *str) {
+    *str = toupper(*str);
 }
 
 void openFileError(FILE *file){
@@ -78,10 +77,11 @@ void openFileError(FILE *file){
         printf("Error al abrir el archivo\n");
         return;
     }
+    exit(EXIT_FAILURE);
 }
 
 bool checkZona(char zona[15]){
-    for (int i=0; i<10; i++){
+    for (int i=0; i<5; i++){
         if (strcmp(zona, zonas[i])==0){
             return true;
         }
@@ -89,17 +89,23 @@ bool checkZona(char zona[15]){
     return false;
 }
 
-void getDate(char *date){
+void getDate(char *date[10]){
     char try[11];
+    int year, month, day;
     printf("Ingrese la fecha en formato YYYY-MM-DD (Los guiones son importantes): ");
-    getString(try, 10);
+    getString(try, 11);
     while(1){
-        if (strlen(try)!=10 || try[4]!='-' || try[7]!='-' || atoi(try)>2025 || atoi(try+5)>12 || atoi(try+8)>31){  
+        if (strlen(try)!=10 || try[4]!='-' || try[7]!='-'){  
             printf("Fecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
-            getString(try, 10);
-        } else break;
+        } else {
+            if (sscanf(try, "%d-%d-%d", &year, &month, &day)!=3 || year>2025 || year<2000 || month>12 || month<1 || day>31 || day<1){
+                printf("Fecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
+            }else break;
+        }
+        getString(try, 11);
     }
-    strcpy(date, try);
+
+    strcpy(*date, try);
 }
 
 void updateData(const char *filename, struct Info *info){
@@ -110,25 +116,25 @@ void updateData(const char *filename, struct Info *info){
     printf("Datos guardados correctamente\n");
 }
 
-void getDiaActual(struct Info *info, const char *filename){
+void getDiaActual(struct Info info, const char *filename){
     int op;
     while(1){
         printf("Ingrese la cantidad de CO2 en ppm: ");
-        validNumData(&info->co2, 350, 6000);
+        validNumData(&info.co2, 350, 6000);
         printf("Ingrese la cantidad de SO2 en ppb: ");
-        validNumData(&info->so2, 0, 500);
+        validNumData(&info.so2, 0, 500);
         printf("Ingrese la cantidad de NO2 en ppb: ");
-        validNumData(&info->no2, 0, 300);
+        validNumData(&info.no2, 0, 300);
         printf("Ingrese la cantidad de PM2.5 en ug/m3: ");
-        validNumData(&info->pm25, 0, 500);
+        validNumData(&info.pm25, 0, 500);
         printf("Ingrese la temperatura en grados Celsius: ");
-        validNumData(&info->temp, -10, 50);
+        validNumData(&info.temp, -10, 50);
         printf("Ingrese la velocidad del viento en km/h: ");
-        validNumData(&info->wind, 0, 50);
+        validNumData(&info.wind, 0, 50);
         printf("Ingrese la humedad en porcentaje: ");
-        validNumData(&info->hum, 0, 100);
+        validNumData(&info.hum, 0, 100);
         printf("Ingrese la fecha en formato YYYY-MM-DD: ");
-        getDate(info->date);
+        getDate(info.date);
         printf("\nLos siguientes datos son correctos?\n"
                 "CO2: %.1f ppm\n"
                 "SO2: %.1f ppb\n"
@@ -151,27 +157,34 @@ void getDiaActual(struct Info *info, const char *filename){
             printf("Opcion invalida, ingrese un numero entre 1 y 2\n");
         }
     }
-    updateData(filename, info);
+    while(getchar()!='\n');
+    updateData(filename, &info);
 }
 
-void readLastLine(const char *filename, struct Info *info, char *line){
+void readLastLine(const char *filename, struct Info *info){
     FILE *file = fopen(filename, "r");
     openFileError(file);
 
+    char line[100];
     fseek(file, 0, SEEK_END); // Ir al final del archivo
     long pos = ftell(file);
+    if (pos==0){
+        printf("No hay datos en el archivo\n");
+        fclose(file);
+        return;
+    }
     while(pos>0){
         fseek(file, --pos, SEEK_SET);
         if (fgetc(file)=='\n') break;
     }
     if (fgets(line, 100, file)!=NULL){
         if (sscanf(line, "%f,%f,%f,%f,%f,%f,%f,%s", &info->co2, &info->so2, &info->no2, &info->pm25, &info->temp, &info->wind, &info->hum, info->date)!=8){
-            printf("Ocurrio un error\n");
+            printf("Ocurrio un error analizando la ultima linea\n");
             fclose(file);
             return;
         }
     } else{ 
-        printf("Ocurrio un error en el archivo.\n");
+        printf("Ocurrio un error leyendo la ultima linea.\n");
         fclose(file);
         return;
     }
@@ -235,52 +248,65 @@ void printAPIEval(float api){
     }
 }
 
-int getIndex(char zona[15], const char zonas[5][15]){
+int getIndex(char zona[15], char zonas[5][15]){
     for (int i=0; i<5; i++){
         if (strcmp(zona, zonas[i])==0){
             return i;
         }
     }
+    return -1;
 }
 
-int validZone(char *zona[]){
+int validZone(char zona[]){
     int index;
     while(1){
         printf("Ingrese el nombre de la zona: ");
         getString(zona, 15);
         mayus(zona);
-        if (!checkZona(zona)){
-            printf("Zona invalida, ingrese una de las siguientes zonas: Calderon, Cumbaya, Pifo, Tababela, Tumbaco\n");
-            continue;
+        if (checkZona(zona)){
+            break;
+        } else {
+            printf("Zona invalida, ingrese una de las siguientes zonas: ");
+            for(int i=0; i<5; i++){
+                printf("%s, ", zonas[i]);
+            }
+            printf("\n");
         }
-        break;
     }
     index=getIndex(zona, zonas);
+    if (index==-1){
+        printf("Error obteniendo el indice de la zona\n");
+        return -1;
+    }
     return index;
 }
 
-void getZoneAPI(const char *filename, struct Info *info, char *line, float api){ 
+void getZoneAPI(const char *filename, struct Info *info, float api){ 
     FILE *file = fopen(filename, "r");
     openFileError(file);
-    readLastLine(filename, info, line);
+    readLastLine(filename, info);
     api=calcAPI(info);
+    if (api==0 || api<0){
+        printf("Error calculando el indice de calidad del aire\n");
+        return;
+    }
     printf("Segun los datos de hoy...\n");
     printAPIEval(api);
 }
 
 void monitorActual(struct Info *info){
-    char zona[15], line[100];
+    char zona[15];
     int index;
     float api;
-    index=validZone(&zona);
-    getZoneAPI(fileNames[index], info, line, api);
+    index=validZone(zona);
+    getZoneAPI(fileNames[index], info, api);
 
 }
 
 int readFilesData(const char *filename, struct readData *data){
 
     char buffer[256];
-    int lineNum, n;
+    int lineNum=0, n=0;
 
     FILE *file = fopen(filename, "r");
     openFileError(file);
@@ -306,7 +332,7 @@ float calcPromPond(float data[], int n){
     int totalWeight, weight;
 
     for(int i=0; i<n; i++){
-        weight = i++;
+        weight = i+1;
         Sum += data[i]*weight;
         totalWeight += weight;
     }
@@ -390,10 +416,8 @@ void printPredict(int api, char zona[15], int index){
 void predictTomorrow(){
 
     char zona[15];
-    float co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm;
     float api;
-    int n;
-    int index = validZone(&zona);
+    int index = validZone(zona);
     predictZone(fileNames[index], &data);
     printPredict(api, zona, index);
 }
@@ -408,37 +432,103 @@ float calcProm(float data[], int n, int days){
     return sum/days;
 }
 
-void historicalAverage(){
-    char zona[15];
-    int index = validZone(&zona);
-    int n = readFilesData(fileNames[index], &data);
-    float co2Prom = calcProm(data.co2Data, n, 30);
-    float so2Prom = calcProm(data.so2Data, n, 30);
-    float no2Prom = calcProm(data.no2Data, n, 30);
-    float pm25Prom = calcProm(data.pm25Data, n, 30);
-    float tempProm = calcProm(data.tempData, n, 30);
-    float windProm = calcProm(data.windData, n, 30);
-    float humProm = calcProm(data.humData, n, 30);
+float historicalAverage(const char *filename, struct readData *data){
+
+    int n = readFilesData(filename, data);
+    float co2Prom = calcProm(data->co2Data, n, 30);
+    float so2Prom = calcProm(data->so2Data, n, 30);
+    float no2Prom = calcProm(data->no2Data, n, 30);
+    float pm25Prom = calcProm(data->pm25Data, n, 30);
+    float tempProm = calcProm(data->tempData, n, 30);
+    float windProm = calcProm(data->windData, n, 30);
+    float humProm = calcProm(data->humData, n, 30);
 
     struct Info proms = {co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm, "none"};
     float api = calcAPI(&proms);
+    return api;
+}
+
+void historicalAvrgBySearch(){
+    char zona[15];
+    int index = validZone(zona);
+    float api = historicalAverage(fileNames[index], &data);
     printf("Segun los datos de los ultimos 30 dias...\n");
     printAPIEval(api);
 }
 
-void writeReport(){
-    FILE *file = fopen("Reporte.txt", "w");
+void writeReport(bool f1, bool f2, bool f3, bool f4, struct Info *info){
+    FILE *file = fopen("reportes.txt", "a");
     openFileError(file);
-    fprintf(file, "Reporte de calidad del aire\n\n");
-    for (int i=0; i<5; i++){
-        fprintf(file, "Zona %s\n", zonas[i]);
-        predictZone(fileNames[i], &data);
-        fprintf(file, "Indice de calidad del aire: %.2f\n", api);
-        printAPIEval(api);
-        fprintf(file, "\n");
+
+    time_t t = time(NULL);
+    char *timestamp = ctime(&t);
+    timestamp[strlen(timestamp)-1]='\0';
+
+    fprintf(file, "Reporte generado el %s\n", timestamp);
+    if (f1){
+        fprintf(file, "Se han ingresado datos del dia actual\n");
+        for (int i=0; i<5; i++){
+            readLastLine(fileNames[i], info);
+            float api = calcAPI(info);
+            fprintf(file, "La informacion ingresada para la zona %s es: \n"
+                    "CO2: %.1f ppm\n"
+                    "SO2: %.1f ppb\n"
+                    "NO2: %.1f ppb\n"
+                    "PM2.5: %.1f ug/m3\n"
+                    "Temperatura: %.1f C\n"
+                    "Velocidad del viento: %.1f km/h\n"
+                    "Humedad: %.1f %%\n"
+                    "Fecha: %s\n", zonas[i], info->co2, info->so2, info->no2, info->pm25, info->temp, info->wind, info->hum, info->date);
+            fprintf(file, "El indice de calidad del aire para la zona %s es: %.2f\n", zonas[i], api);
+            printAPIEval(api);
+            fprintf(file, "************************************\n");
+        }
+
+    } 
+    if (!f1) {
+        fprintf(file, "No se han ingresado datos del dia actual\n");
     }
+    if (f1 && f2){
+        fprintf(file, "Se ha monitoreado la calidad del aire actual\n");
+    } else if (!f1 && f2){
+        fprintf(file, "Se ha monitoreado la calidad del aire segun los ultimos datos anadidos\n");
+        for (int i=0; i<5; i++){
+            readLastLine(fileNames[i], info);
+            float api = calcAPI(info);
+            fprintf(file, "El indice de calidad del aire para la zona %s es: %.2f\n", zonas[i], api);
+            printAPIEval(api);
+            fprintf(file, "************************************\n");
+        }
+    }
+    if (!f2){
+        fprintf(file, "No se ha monitoreado la calidad del aire actual\n");
+    }
+    if (f3){
+        fprintf(file, "Se ha predicho la calidad del aire para manana\n");
+        for (int i=0; i<5; i++){
+            predictZone(fileNames[i], &data);
+            float api = predictZone(fileNames[i], &data);
+            fprintf(file, "El indice de calidad del aire de manana para la zona %s es: %d\n", zonas[i], api);
+            printPredict(api, zonas[i], i);
+            fprintf(file, "************************************\n");
+        }
+    } else{
+        fprintf(file, "No se ha predicho la calidad del aire para manana\n");
+    }
+    if (f4){
+        fprintf(file, "Se ha calculado el promedio historico de los ultimos 30 dias\n");
+        for (int i=0; i<5; i++){
+            float api=historicalAverage(fileNames[i], &data);
+            printAPIEval(api);
+            fprintf(file, "************************************\n");
+        }
+    } else{
+        fprintf(file, "No se ha calculado el promedio historico de los ultimos 30 dias\n");
+    }
+    fprintf(file, "Fin del reporte\n"
+                    "--------------------------------------------------------------------------------\n");
     fclose(file);
-    printf("Reporte guardado correctamente\n");
+
 }
 
 int mainValid(bool f1){
@@ -446,16 +536,17 @@ int mainValid(bool f1){
     if (!f1){
         printf("No se han ingresado datos del dia actual\n");
         while(1){        
-            printf ("Deseas monitorear los ultimos datos guardados?\n"
+            printf ("Deseas trabajar con los ultimos datos guardados?\n"
                     "1. Si\n"
                     "2. No\n"
                     ">> ");
             scanf("%d", &op);
+            while(getchar()!='\n');
             if (op==1){
                 return op;     
             }else if (op==2){
                 printf("Regresando al menu principal\n");
-                return op==2;
+                return op;
             }else{
                 printf("Opcion invalida, ingrese un numero entre 1 y 2\n");
                 continue;
