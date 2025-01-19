@@ -8,6 +8,8 @@
 
 const char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
 
+const char fileNames[5][15] = {"Data/calderon.csv", "Data/cumbaya.csv", "Data/pifo.csv", "Data/tababela.csv", "Data/tumbaco.csv"};
+
 const float co2Breakpoints[6][4] = {
     {0.0, 350.0, 0, 50},
     {351.0, 450.0, 51, 100},
@@ -41,7 +43,6 @@ const float pm25Breakpoints[6][4] = {
     {250.5, 500.4, 301, 500}
 };
 
- 
 void getString(char string[], int length){
     while (getchar()!='\n');
     fgets(string, length, stdin);
@@ -263,25 +264,179 @@ void monitorActual(struct Info *info){
     index=getSwitchIndex(zona, zonas);
     switch(index){
         case 0:
-            maSwitchCase("Data/calderon.csv", info, line, api);
+            maSwitchCase(fileNames[index], info, line, api);
             break;
         case 1:
-            maSwitchCase("Data/cumbaya.csv", info, line, api);
+            maSwitchCase(fileNames[index], info, line, api);
             break;
         case 2:
-            maSwitchCase("Data/pifo.csv", info, line, api);
+            maSwitchCase(fileNames[index], info, line, api);
             break;
         case 3:
-            maSwitchCase("Data/tababela.csv", info, line, api);
+            maSwitchCase(fileNames[index], info, line, api);
             break;
         case 4:
-            maSwitchCase("Data/tumbaco.csv", info, line, api);
+            maSwitchCase(fileNames[index], info, line, api);
             break;
     }
 }
 
-void predictTomorrow(){
+int readFilesData(const char *filename, float co2Data[], float so2Data[], float no2Data[], float pm25Data[], float tempData[], float windData[], float humData[]){
+
+    char buffer[256];
+    int lineNum, n;
+
+    FILE *file = fopen(filename, "r");
+    openFileError(file);
     
+    while(fgets(buffer, 256, file)!=NULL){
+        lineNum++;
+
+        if (lineNum>=3){
+            char line[100];
+            while (fgets(line, 100, file)!=NULL){
+                if (sscanf(line, "%f,%f,%f,%f,%f,%f,%f", &co2Data[n], &so2Data[n], &no2Data[n], &pm25Data[n], &tempData[n], &windData[n], &humData[n])==7) (n)++;
+            }
+        }
+
+    }
+    
+    fclose(file);
+    return n;
+}
+
+float calcPromPond(float data[], int n){
+    float Sum;
+    int totalWeight;
+
+    for(int i=0; i<n; i++){
+        int weight = n+i;
+        Sum += data[i]*weight;
+        totalWeight += weight;
+    }
+
+    return Sum/totalWeight;
+}
+
+float predictZone(const char *filename, float co2Data[], float so2Data[], float no2Data[], float pm25Data[], float tempData[], float windData[], float humData[],int *n){
+    
+    int n = readFilesData(filename, co2Data, so2Data, no2Data, pm25Data, tempData, windData, humData);
+    float co2Prom = calcPromPond(co2Data, n);
+    float so2Prom = calcPromPond(so2Data, n);
+    float no2Prom = calcPromPond(no2Data, n);
+    float pm25Prom = calcPromPond(pm25Data, n);
+    float tempProm = calcPromPond(tempData, n);
+    float windProm = calcPromPond(windData, n);
+    float humProm = calcPromPond(humData, n);
+
+    struct nonDated proms = {co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm};
+    float api = calcAPI(&proms);
+    return api;
+}
+
+void predictionAlerts(){
+
+    float co2Data[100], so2Data[100], no2Data[100], pm25Data[100], tempData[100], windData[100], humData[100];
+    int n;
+    float api;
+
+    for (int i=0; i<5; i++){
+        api=predictZone(fileNames[i], co2Data, so2Data, no2Data, pm25Data, tempData, windData, humData, &n);
+        if (api>200){
+            printf("ALERTA DE PELIGRO, LOS INDICES PARA MANANA EN LA ZONA %s SUPERARAN EL LIMITE DE 200 API\n"
+                    "LA CALIDAD DEL AIRE SERA PELIGROSA PARA LA SALUD\n"
+                    "Para mayor informacion ingrese 3 en el programa.\n", zonas[i]);
+        }
+    }
+}
+
+void printPredict(int api, char zona[15], int index){
+    printf("El indice de calidad del aire para manana en la zona %s es: %d\n", zona, api);
+    if (api>=0 && api<=50){
+        printf("Calidad del aire: Buena\n");
+    } else if (api>=51 && api<=100){
+        printf("Calidad del aire: Moderada\n");
+    } else if (api>=101 && api<=150){
+        printf("Calidad del aire: Danina para grupos sensibles\n");
+    } else if (api>=151 && api<=200){
+        printf ("ALERTA DE PELIGRO:\n"
+                "Calidad del aire: Danina para la salud\n");
+        switch(index){
+            case 0:
+                printf("Para la zona %s se recomienda: \n"
+                    "Suspender las actividades de mercados en el exterior y festivales.\n"
+                    "Prohibir el uso de madera o basura como combustible.\n", zonas[index]);
+                break;
+            case 1:
+                printf("Para la zona %s se recomienda: \n"
+                    "Transicion de las instituciones educativas a la educacion virtual.\n"
+                    "Inicitar a los negocios de comida a funcionar solamente a domicilio para limitar la exposicion.\n", zonas[index]);
+                break;
+            case 2:
+                printf("Para la zona %s se recomienda: \n"
+                    "Suspender las actividades industriales que emiten contaminantes temporalmente.\n"
+                    "Inicitar a los negocios a minimizar la contaminacion dentro de lugares cerrados usando ventilacion adecuada.\n", zonas[index]);
+                break;
+            case 3:
+                printf("Para la zona %s se recomienda: \n"
+                    "Restringir los viajes no esenciales hacia el aeropuerto Mariscal Sucre.\n"
+                    "Incrementar los servicios de transporte electricos para reducir las emisiones de automoviles alrededor del aeropuerto.\n"
+                    "Proveer a viajeros con mascarillas.\n", zonas[index]);
+                break;
+            case 4:
+                printf("Para la zona %s se recomienda: \n"
+                    "Cierre de calles no esenciales y restringir el uso de vehiculos a solo vehiculos electricos y de emergencia.\n"
+                    "Ademas, se deberian distribuir mascarilas en centros comunitarios y estaciones de transporte publico.\n", zonas[index]);
+                break;
+        }
+
+    }   
+}
+
+void predictTomorrow(){
+
+    float co2Data[100], so2Data[100], no2Data[100], pm25Data[100], tempData[100], windData[100], humData[100];
+    char zona[15];
+    float co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm;
+    float api;
+    int n;
+
+    while(1){
+        printf("Ingrese el nombre de la zona que desea predecir a detalle: ");
+        getString(zona, 15);
+        mayus(zona);
+        if (!checkZona(zona)){
+            printf("Zona invalida, ingrese una de las siguientes zonas: Calderon, Cumbaya, Pifo, Tababela, Tumbaco\n");
+            continue;
+        }
+        break;
+    }
+
+    int index = getSwitchIndex(zona, zonas);
+    predictZone(fileNames[index], co2Data, so2Data, no2Data, pm25Data, tempData, windData, humData, &n);
+    printPredict(api, zona, index);
 }
 
 
+int mainValid(bool f1){
+    int op;
+    if (!f1){
+        printf("No se han ingresado datos del dia actual\n");
+        while(1){        
+            printf ("Deseas monitorear los ultimos datos guardados?\n"
+                    "1. Si\n"
+                    "2. No\n"
+                    ">> ");
+            scanf("%d", &op);
+            if (op==1){
+                return op;     
+            }else if (op==2){
+                printf("Regresando al menu principal\n");
+                return op==2;
+            }else{
+                printf("Opcion invalida, ingrese un numero entre 1 y 2\n");
+                continue;
+            }
+        }
+    }
+}
