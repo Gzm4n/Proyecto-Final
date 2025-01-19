@@ -6,9 +6,13 @@
 #include <ctype.h>
 #include "funciones.h"
 
+#define startLine 3 // Linea donde empiezan los datos en los archivos
+
+struct readData data;
+
 const char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
 
-const char fileNames[5][15] = {"Data/calderon.csv", "Data/cumbaya.csv", "Data/pifo.csv", "Data/tababela.csv", "Data/tumbaco.csv"};
+const char fileNames[5][30]= {"Data/calderon.csv", "Data/cumbaya.csv", "Data/pifo.csv", "Data/tababela.csv", "Data/tumbaco.csv"};
 
 const float co2Breakpoints[6][4] = {
     {0.0, 350.0, 0, 50},
@@ -212,8 +216,8 @@ float calcAPI(struct Info *info){
     return api * temp * wind * humidity;
 }
 
-void printMA(float api){
-    printf("El indice de calidad del aire es: %.2f\n", api);
+void printAPIEval(float api){
+    printf("\nEl indice de calidad del aire es: %.2f\n", api);
     if (api>=0 && api<=50){
         printf("Calidad del aire: Buena\n");
     } else if (api>=51 && api<=100){
@@ -231,7 +235,7 @@ void printMA(float api){
     }
 }
 
-int getSwitchIndex(char zona[15], const char zonas[5][15]){
+int getIndex(char zona[15], const char zonas[5][15]){
     for (int i=0; i<5; i++){
         if (strcmp(zona, zonas[i])==0){
             return i;
@@ -239,20 +243,10 @@ int getSwitchIndex(char zona[15], const char zonas[5][15]){
     }
 }
 
-void maSwitchCase(const char *filename, struct Info *info, char *line, float api){ //Funcion para el menu de monitorActual
-    FILE *file = fopen(filename, "r");
-    openFileError(file);
-    readLastLine(filename, info, line);
-    api=calcAPI(info);
-    printMA(api);
-}
-
-void monitorActual(struct Info *info){
-    char zona[15], line[100];
+int validZone(char *zona[]){
     int index;
-    float api;
     while(1){
-        printf("Ingrese la zona que desea monitorear: ");
+        printf("Ingrese el nombre de la zona: ");
         getString(zona, 15);
         mayus(zona);
         if (!checkZona(zona)){
@@ -261,27 +255,29 @@ void monitorActual(struct Info *info){
         }
         break;
     }
-    index=getSwitchIndex(zona, zonas);
-    switch(index){
-        case 0:
-            maSwitchCase(fileNames[index], info, line, api);
-            break;
-        case 1:
-            maSwitchCase(fileNames[index], info, line, api);
-            break;
-        case 2:
-            maSwitchCase(fileNames[index], info, line, api);
-            break;
-        case 3:
-            maSwitchCase(fileNames[index], info, line, api);
-            break;
-        case 4:
-            maSwitchCase(fileNames[index], info, line, api);
-            break;
-    }
+    index=getIndex(zona, zonas);
+    return index;
 }
 
-int readFilesData(const char *filename, float co2Data[], float so2Data[], float no2Data[], float pm25Data[], float tempData[], float windData[], float humData[]){
+void getZoneAPI(const char *filename, struct Info *info, char *line, float api){ 
+    FILE *file = fopen(filename, "r");
+    openFileError(file);
+    readLastLine(filename, info, line);
+    api=calcAPI(info);
+    printf("Segun los datos de hoy...\n");
+    printAPIEval(api);
+}
+
+void monitorActual(struct Info *info){
+    char zona[15], line[100];
+    int index;
+    float api;
+    index=validZone(&zona);
+    getZoneAPI(fileNames[index], info, line, api);
+
+}
+
+int readFilesData(const char *filename, struct readData *data){
 
     char buffer[256];
     int lineNum, n;
@@ -292,13 +288,13 @@ int readFilesData(const char *filename, float co2Data[], float so2Data[], float 
     while(fgets(buffer, 256, file)!=NULL){
         lineNum++;
 
-        if (lineNum>=3){
-            char line[100];
-            while (fgets(line, 100, file)!=NULL){
-                if (sscanf(line, "%f,%f,%f,%f,%f,%f,%f", &co2Data[n], &so2Data[n], &no2Data[n], &pm25Data[n], &tempData[n], &windData[n], &humData[n])==7) (n)++;
+        if (lineNum>=startLine){
+            char line[256];
+            while (fgets(line, 256, file)!=NULL){
+                if (sscanf(line, "%f,%f,%f,%f,%f,%f,%f", data->co2Data[n], data->so2Data[n], data->no2Data[n], data->pm25Data[n], data->tempData[n], data->windData[n], data->humData[n])==7) (n)++;
             }
+            break;
         }
-
     }
     
     fclose(file);
@@ -307,10 +303,10 @@ int readFilesData(const char *filename, float co2Data[], float so2Data[], float 
 
 float calcPromPond(float data[], int n){
     float Sum;
-    int totalWeight;
+    int totalWeight, weight;
 
     for(int i=0; i<n; i++){
-        int weight = n+i;
+        weight = i++;
         Sum += data[i]*weight;
         totalWeight += weight;
     }
@@ -318,30 +314,28 @@ float calcPromPond(float data[], int n){
     return Sum/totalWeight;
 }
 
-float predictZone(const char *filename, float co2Data[], float so2Data[], float no2Data[], float pm25Data[], float tempData[], float windData[], float humData[],int *n){
-    
-    int n = readFilesData(filename, co2Data, so2Data, no2Data, pm25Data, tempData, windData, humData);
-    float co2Prom = calcPromPond(co2Data, n);
-    float so2Prom = calcPromPond(so2Data, n);
-    float no2Prom = calcPromPond(no2Data, n);
-    float pm25Prom = calcPromPond(pm25Data, n);
-    float tempProm = calcPromPond(tempData, n);
-    float windProm = calcPromPond(windData, n);
-    float humProm = calcPromPond(humData, n);
+float predictZone(const char *filename, struct readData *data){
 
-    struct nonDated proms = {co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm};
+    int n = readFilesData(filename, data);
+    float co2Prom = calcPromPond(data->co2Data, n);
+    float so2Prom = calcPromPond(data->so2Data, n);
+    float no2Prom = calcPromPond(data->no2Data, n);
+    float pm25Prom = calcPromPond(data->pm25Data, n);
+    float tempProm = calcPromPond(data->tempData, n);
+    float windProm = calcPromPond(data->windData, n);
+    float humProm = calcPromPond(data->humData, n);
+
+    struct Info proms = {co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm, "none"};
     float api = calcAPI(&proms);
     return api;
 }
 
 void predictionAlerts(){
 
-    float co2Data[100], so2Data[100], no2Data[100], pm25Data[100], tempData[100], windData[100], humData[100];
-    int n;
     float api;
 
     for (int i=0; i<5; i++){
-        api=predictZone(fileNames[i], co2Data, so2Data, no2Data, pm25Data, tempData, windData, humData, &n);
+        api=predictZone(fileNames[i], &data);
         if (api>200){
             printf("ALERTA DE PELIGRO, LOS INDICES PARA MANANA EN LA ZONA %s SUPERARAN EL LIMITE DE 200 API\n"
                     "LA CALIDAD DEL AIRE SERA PELIGROSA PARA LA SALUD\n"
@@ -395,28 +389,57 @@ void printPredict(int api, char zona[15], int index){
 
 void predictTomorrow(){
 
-    float co2Data[100], so2Data[100], no2Data[100], pm25Data[100], tempData[100], windData[100], humData[100];
     char zona[15];
     float co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm;
     float api;
     int n;
-
-    while(1){
-        printf("Ingrese el nombre de la zona que desea predecir a detalle: ");
-        getString(zona, 15);
-        mayus(zona);
-        if (!checkZona(zona)){
-            printf("Zona invalida, ingrese una de las siguientes zonas: Calderon, Cumbaya, Pifo, Tababela, Tumbaco\n");
-            continue;
-        }
-        break;
-    }
-
-    int index = getSwitchIndex(zona, zonas);
-    predictZone(fileNames[index], co2Data, so2Data, no2Data, pm25Data, tempData, windData, humData, &n);
+    int index = validZone(&zona);
+    predictZone(fileNames[index], &data);
     printPredict(api, zona, index);
 }
 
+float calcProm(float data[], int n, int days){
+    float sum;
+    int final=n-1-days;
+
+    for (int i=n-1; i<final; i--){
+        sum+=data[i];
+    }
+    return sum/days;
+}
+
+void historicalAverage(){
+    char zona[15];
+    int index = validZone(&zona);
+    int n = readFilesData(fileNames[index], &data);
+    float co2Prom = calcProm(data.co2Data, n, 30);
+    float so2Prom = calcProm(data.so2Data, n, 30);
+    float no2Prom = calcProm(data.no2Data, n, 30);
+    float pm25Prom = calcProm(data.pm25Data, n, 30);
+    float tempProm = calcProm(data.tempData, n, 30);
+    float windProm = calcProm(data.windData, n, 30);
+    float humProm = calcProm(data.humData, n, 30);
+
+    struct Info proms = {co2Prom, so2Prom, no2Prom, pm25Prom, tempProm, windProm, humProm, "none"};
+    float api = calcAPI(&proms);
+    printf("Segun los datos de los ultimos 30 dias...\n");
+    printAPIEval(api);
+}
+
+void writeReport(){
+    FILE *file = fopen("Reporte.txt", "w");
+    openFileError(file);
+    fprintf(file, "Reporte de calidad del aire\n\n");
+    for (int i=0; i<5; i++){
+        fprintf(file, "Zona %s\n", zonas[i]);
+        predictZone(fileNames[i], &data);
+        fprintf(file, "Indice de calidad del aire: %.2f\n", api);
+        printAPIEval(api);
+        fprintf(file, "\n");
+    }
+    fclose(file);
+    printf("Reporte guardado correctamente\n");
+}
 
 int mainValid(bool f1){
     int op;

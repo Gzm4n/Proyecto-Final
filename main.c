@@ -5,7 +5,7 @@
 int main (int argc, char *argv[]) {
 
     const char zonas[5][15] = {"Calderon", "Cumbaya", "Pifo", "Tababela", "Tumbaco"};
-    const char fileNames[5][15] = {"Data/calderon.csv", "Data/cumbaya.csv", "Data/pifo.csv", "Data/tababela.csv", "Data/tumbaco.csv"};
+    const char fileNames[5][30] = {"Data/calderon.csv", "Data/cumbaya.csv", "Data/pifo.csv", "Data/tababela.csv", "Data/tumbaco.csv"};
     struct Info info;
     int op1, op2;
     bool f1;
