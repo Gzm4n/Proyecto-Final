@@ -29,9 +29,10 @@ int main (int argc, char *argv[]) {
                 for (int i = 0; i < 5; i++) {
                     printf("Ingrese los datos de la zona %s\n", zonas[i]);
                     getDiaActual(info, fileNames[i]);
-                    predictionAlerts();
-                    f1 = true;
                 }
+                predictionAlerts();
+                f1 = true;
+
                 break;
             case 2:
                 op2 = mainValid(f1);
@@ -41,7 +42,7 @@ int main (int argc, char *argv[]) {
                 break;
             case 3:
                 op2 = mainValid(f1);
-                if (op2=2) break;
+                if (op2==2) break;
                 predictTomorrow();
                 f3 = true;
                 break;

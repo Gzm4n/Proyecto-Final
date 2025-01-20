@@ -11,9 +11,9 @@ def random_float(min_val, max_val, decimals=1):
 data = []
 for day in range(num_days):
     date = (start_date + timedelta(days=day)).strftime("%Y-%m-%d")
-    co2 = random_float(350, 6000)
-    so2 = random_float(0, 500)
-    no2 = random_float(0, 300)
+    co2 = random_float(0, 2000)
+    so2 = random_float(0, 2100)
+    no2 = random_float(0, 500)
     pm25 = random_float(0, 500)
     temperature = random_float(-10, 50)
     wind_speed = random_float(0, 50)
