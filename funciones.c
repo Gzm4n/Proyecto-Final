@@ -100,10 +100,10 @@ void getDate(char date[10]){ //Funcion para obtener la fecha en formato YYYY-MM-
     getString(try, 11);
     while(1){
         if (strlen(try)!=10 || try[4]!='-' || try[7]!='-'){  
-            printf("Fecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
+            printf("\nFecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
         } else {
             if (sscanf(try, "%d-%d-%d", &year, &month, &day)!=3 || year>2025 || year<2000 || month>12 || month<1 || day>31 || day<1){ //string scanf
-                printf("Fecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
+                printf("\nFecha invalida, ingrese la fecha en formato YYYY-MM-DD: ");
             }else break;
         }
         getString(try, 11);
@@ -160,7 +160,7 @@ void getDiaActual(struct Info info, const char *filename){ //Funcion para obtene
             printf("Opcion invalida, ingrese un numero entre 1 y 2\n");
         }
     }
-    printf("Guardando datos...\n");
+    printf("\nGuardando datos...\n");
     while(getchar()!='\n');
     updateData(filename, &info);
 }
@@ -210,14 +210,11 @@ float getApiSubIndex(float val, const float breakpoints[6][4]){ //Funcion para o
 
 float calcAPI(struct Info *info){ //Funcion para calcular el indice de calidad del aire
     float temp=0.0;
+    printf("\nCalculando subindices...\n");
     float co2Index = getApiSubIndex(info->co2, co2Breakpoints);
-    printf("\nCO2 index: %f\n", co2Index);
     float so2Index = getApiSubIndex(info->so2, so2Breakpoints);
-    printf("\nSO2 index: %f\n", so2Index);
     float no2Index = getApiSubIndex(info->no2, no2Breakpoints);
-    printf("\nNO2 index: %f\n", no2Index);
     float pm25Index = getApiSubIndex(info->pm25, pm25Breakpoints);
-    printf("\nPM2.5 index: %f\n", pm25Index);
 
     float api = co2Index;
     if (so2Index>api) api = so2Index;
@@ -267,13 +264,13 @@ int getIndex(char zona[15], char zonas[5][15]){ //Funcion para obtener el indice
 int validZone(char zona[]){ //Funcion para validar la zona ingresada
     int index;
     while(1){
-        printf("Ingrese el nombre de la zona: ");
+        printf("\nIngrese el nombre de la zona: ");
         getString(zona, 15);
         mayus(zona);
         if (checkZona(zona)){
             break;
         } else {
-            printf("Zona invalida, ingrese una de las siguientes zonas: ");
+            printf("\nZona invalida, ingrese una de las siguientes zonas: ");
             for(int i=0; i<5; i++){
                 printf("%s, ", zonas[i]);
             }
@@ -282,7 +279,7 @@ int validZone(char zona[]){ //Funcion para validar la zona ingresada
     }
     index=getIndex(zona, zonas);
     if (index==-1){
-        printf("Error obteniendo el indice de la zona\n");
+        printf("\nError obteniendo el indice de la zona\n");
         return -1;
     }
     return index;
@@ -293,12 +290,11 @@ void getZoneAPI(const char *filename, struct Info *info, float api){ //Funcion p
     openFileError(file);
     readLastLine(filename, info);
     api=calcAPI(info);
-    printf("%f", api);
     if (api<=0){
-        printf("Error calculando el indice de calidad del aire\n");
+        printf("\nError calculando el indice de calidad del aire\n");
         return;
     }
-    printf("Segun los datos de hoy...\n");
+    printf("\nSegun los datos de hoy...\n");
     printAPIEval(api);
 }
 
@@ -371,53 +367,52 @@ void predictionAlerts(){ //Funcion para alertar si el indice de calidad del aire
     float api=0.0;
     for (int i=0; i<5; i++){
         api=predictZone(fileNames[i], &data);
-        printf("%f", api);
         if (api>200){
-            printf("ALERTA DE PELIGRO, LOS INDICES PARA MANANA EN LA ZONA %s SUPERARAN EL LIMITE DE 200 API\n"
+            printf("\nALERTA DE PELIGRO, LOS INDICES PARA MANANA EN LA ZONA %s SUPERARAN EL LIMITE DE 200 API\n"
                     "LA CALIDAD DEL AIRE SERA PELIGROSA PARA LA SALUD\n", zonas[i]);
         }
     }
-    printf("Para mas informacion, ingrese 3 en el progrrama\n");
+    printf("\nPara mas informacion, ingrese 3 en el progrrama\n");
 }
 
 void printPredict(int api, char zona[15], int index){ //Funcion para imprimir la prediccion del indice de calidad del aire de manana junto con sus recomendaciones divididas por zona
-    printf("El indice de calidad del aire para manana en la zona %s es: %d\n", zona, api);
+    printf("\nEl indice de calidad del aire para manana en la zona %s es: %d\n", zona, api);
     if (api>=0 && api<=50){
-        printf("Calidad del aire: Buena\n");
+        printf("\nCalidad del aire: Buena\n");
     } else if (api>=51 && api<=100){
-        printf("Calidad del aire: Moderada\n");
+        printf("\nCalidad del aire: Moderada\n");
     } else if (api>=101 && api<=150){
-        printf("Calidad del aire: Danina para grupos sensibles\n"
-                "Se recomienda mantener a las personas vulnerables dentro de lugares cerrados y bien ventilados. O el uso de mascarrillas.\n");
+        printf("\nCalidad del aire: Danina para grupos sensibles\n"
+                "\nSe recomienda mantener a las personas vulnerables dentro de lugares cerrados y bien ventilados. O el uso de mascarrillas.\n");
     } else if (api>=151 && api<=200){
-        printf ("ALERTA DE PELIGRO:\n"
-                "Calidad del aire: Danina para la salud\n");
+        printf ("\nALERTA DE PELIGRO:\n"
+                "\nCalidad del aire: Danina para la salud\n");
         switch(index){
             case 0:
-                printf("Para la zona %s se recomienda: \n"
-                    "Suspender las actividades de mercados en el exterior y festivales.\n"
-                    "Prohibir el uso de madera o basura como combustible.\n", zonas[index]);
+                printf("\nPara la zona %s se recomienda: \n"
+                    "\nSuspender las actividades de mercados en el exterior y festivales.\n"
+                    "\nProhibir el uso de madera o basura como combustible.\n", zonas[index]);
                 break;
             case 1:
-                printf("Para la zona %s se recomienda: \n"
-                    "Transicion de las instituciones educativas a la educacion virtual.\n"
-                    "Inicitar a los negocios de comida a funcionar solamente a domicilio para limitar la exposicion.\n", zonas[index]);
+                printf("\nPara la zona %s se recomienda: \n"
+                    "\nTransicion de las instituciones educativas a la educacion virtual.\n"
+                    "\nInicitar a los negocios de comida a funcionar solamente a domicilio para limitar la exposicion.\n", zonas[index]);
                 break;
             case 2:
-                printf("Para la zona %s se recomienda: \n"
-                    "Suspender las actividades industriales que emiten contaminantes temporalmente.\n"
-                    "Inicitar a los negocios a minimizar la contaminacion dentro de lugares cerrados usando ventilacion adecuada.\n", zonas[index]);
+                printf("\nPara la zona %s se recomienda: \n"
+                    "\nSuspender las actividades industriales que emiten contaminantes temporalmente.\n"
+                    "\nInicitar a los negocios a minimizar la contaminacion dentro de lugares cerrados usando ventilacion adecuada.\n", zonas[index]);
                 break;
             case 3:
-                printf("Para la zona %s se recomienda: \n"
-                    "Restringir los viajes no esenciales hacia el aeropuerto Mariscal Sucre.\n"
-                    "Incrementar los servicios de transporte electricos para reducir las emisiones de automoviles alrededor del aeropuerto.\n"
-                    "Proveer a viajeros con mascarillas.\n", zonas[index]);
+                printf("\nPara la zona %s se recomienda: \n"
+                    "\nRestringir los viajes no esenciales hacia el aeropuerto Mariscal Sucre.\n"
+                    "\nIncrementar los servicios de transporte electricos para reducir las emisiones de automoviles alrededor del aeropuerto.\n"
+                    "\nProveer a viajeros con mascarillas.\n", zonas[index]);
                 break;
             case 4:
-                printf("Para la zona %s se recomienda: \n"
-                    "Cierre de calles no esenciales y restringir el uso de vehiculos a solo vehiculos electricos y de emergencia.\n"
-                    "Ademas, se deberian distribuir mascarilas en centros comunitarios y estaciones de transporte publico.\n", zonas[index]);
+                printf("\nPara la zona %s se recomienda: \n"
+                    "\nCierre de calles no esenciales y restringir el uso de vehiculos a solo vehiculos electricos y de emergencia.\n"
+                    "\nAdemas, se deberian distribuir mascarilas en centros comunitarios y estaciones de transporte publico.\n", zonas[index]);
                 break;
         }
 
@@ -460,7 +455,7 @@ void historicalAvrgBySearch(){ //Funcion para calcular el promedio historico de 
     char zona[15];
     int index = validZone(zona);
     float api = historicalAverage(fileNames[index], &data);
-    printf("Segun los datos de los ultimos 30 dias...\n");
+    printf("\nSegun los datos de los ultimos 30 dias...\n");
     printAPIEval(api);
 }
 
@@ -484,41 +479,41 @@ void printAPIEF(FILE *file, float api){ //Funcion para imprimir la evaluacion de
 }
 
 void printPredictF(int api, char zona[15], int index, FILE *file){ //Funcion para imprimir la prediccion del indice de calidad del aire de manana junto con sus recomendaciones divididas por zona en el archivo
-    fprintf(file, "El indice de calidad del aire para manana en la zona %s es: %d\n", zona, api);
+    fprintf(file, "\nEl indice de calidad del aire para manana en la zona %s es: %d\n", zona, api);
     if (api>=0 && api<=50){
-        fprintf(file, "Calidad del aire: Buena\n");
+        fprintf(file, "\nCalidad del aire: Buena\n");
     } else if (api>=51 && api<=100){
-        fprintf(file, "Calidad del aire: Moderada\n");
+        fprintf(file, "\nCalidad del aire: Moderada\n");
     } else if (api>=101 && api<=150){
-        fprintf(file, "Calidad del aire: Danina para grupos sensibles\n"
+        fprintf(file, "\nCalidad del aire: Danina para grupos sensibles\n"
                 "Se recomienda mantener a las personas vulnerables dentro de lugares cerrados y bien ventilados. O el uso de mascarrillas.\n");
     } else if (api>=151 && api<=200){
-        fprintf (file, "ALERTA DE PELIGRO:\n"
-                "Calidad del aire: Danina para la salud\n");
+        fprintf (file, "\nALERTA DE PELIGRO:\n"
+                "\nCalidad del aire: Danina para la salud\n");
         switch(index){
             case 0:
-                fprintf(file, "Para la zona %s se recomienda: \n"
+                fprintf(file, "\nPara la zona %s se recomienda: \n"
                     "Suspender las actividades de mercados en el exterior y festivales.\n"
                     "Prohibir el uso de madera o basura como combustible.\n", zonas[index]);
                 break;
             case 1:
-                fprintf(file, "Para la zona %s se recomienda: \n"
+                fprintf(file, "\nPara la zona %s se recomienda: \n"
                     "Transicion de las instituciones educativas a la educacion virtual.\n"
                     "Inicitar a los negocios de comida a funcionar solamente a domicilio para limitar la exposicion.\n", zonas[index]);
                 break;
             case 2:
-                fprintf(file, "Para la zona %s se recomienda: \n"
+                fprintf(file, "\nPara la zona %s se recomienda: \n"
                     "Suspender las actividades industriales que emiten contaminantes temporalmente.\n"
                     "Inicitar a los negocios a minimizar la contaminacion dentro de lugares cerrados usando ventilacion adecuada.\n", zonas[index]);
                 break;
             case 3:
-                fprintf(file, "Para la zona %s se recomienda: \n"
+                fprintf(file, "\nPara la zona %s se recomienda: \n"
                     "Restringir los viajes no esenciales hacia el aeropuerto Mariscal Sucre.\n"
                     "Incrementar los servicios de transporte electricos para reducir las emisiones de automoviles alrededor del aeropuerto.\n"
                     "Proveer a viajeros con mascarillas.\n", zonas[index]);
                 break;
             case 4:
-                fprintf(file, "Para la zona %s se recomienda: \n"
+                fprintf(file, "\nPara la zona %s se recomienda: \n"
                     "Cierre de calles no esenciales y restringir el uso de vehiculos a solo vehiculos electricos y de emergencia.\n"
                     "Ademas, se deberian distribuir mascarilas en centros comunitarios y estaciones de transporte publico.\n", zonas[index]);
                 break;
@@ -574,29 +569,37 @@ void writeReport(bool f1, bool f2, bool f3, bool f4, struct Info *info){ //Funci
     if (!f2){
         fprintf(file, "\nNo se ha monitoreado la calidad del aire actual\n");
     }
-    if (f3){
-        fprintf(file, "\nSe ha predicho la calidad del aire para manana\n");
+    if(f3 && !f1){
+        fprintf(file,"\nSe predijo la calidad del aire con los datos existentes (sin valor actual)\n");
         for (int i=0; i<5; i++){
             predictZone(fileNames[i], &data);
             float api = predictZone(fileNames[i], &data);
-            fprintf(file, "El indice de calidad del aire de manana para la zona %s es: %d\n", zonas[i], api);
+            printPredictF(api, zonas[i], i, file);
+            fprintf(file, "************************************\n");
+        }
+    }else if(f3 && f1){
+        fprintf(file, "\nSe ha predicho la calidad del aire para manana con valores actuales\n");
+        for (int i=0; i<5; i++){
+            predictZone(fileNames[i], &data);
+            float api = predictZone(fileNames[i], &data);
             printPredictF(api, zonas[i], i, file);
             fprintf(file, "************************************\n");
         }
     } else{
-        fprintf(file, "No se ha predicho la calidad del aire para manana\n");
+        fprintf(file, "\nNo se ha predicho la calidad del aire para manana\n");
     }
     if (f4){
-        fprintf(file, "Se ha calculado el promedio historico de los ultimos 30 dias\n");
+        fprintf(file, "\nSe ha calculado el promedio historico de los ultimos 30 dias\n");
         for (int i=0; i<5; i++){
             float api=historicalAverage(fileNames[i], &data);
+            fprintf(file, "\nPara la zona %s:\n", zonas[i]);
             printAPIEF(file, api);
             fprintf(file, "************************************\n");
         }
     } else{
-        fprintf(file, "No se ha calculado el promedio historico de los ultimos 30 dias\n");
+        fprintf(file, "\nNo se ha calculado el promedio historico de los ultimos 30 dias\n");
     }
-    fprintf(file, "Fin del reporte\n"
+    fprintf(file, "\nFin del reporte\n"
                     "--------------------------------------------------------------------------------\n");
     fclose(file);
 

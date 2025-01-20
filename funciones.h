@@ -1,7 +1,7 @@
 
 #define maxData 100
 
-struct Info{
+struct Info{ //Estructura para la informacion correspondiente
     float co2;
     float so2;
     float no2;
@@ -12,7 +12,7 @@ struct Info{
     char date[10];
 };
 
-struct readData{
+struct readData{ //Estructura para almacenar los datos leidos
     float co2Data[maxData];
     float so2Data[maxData];
     float no2Data[maxData];
@@ -22,6 +22,8 @@ struct readData{
     float humData[maxData];
 };
 
+
+//Prototipado de funciones que se utilizan en main
 void getDiaActual(struct Info info, const char *filename);
 void monitorActual(struct Info *info);
 void predictionAlerts();
