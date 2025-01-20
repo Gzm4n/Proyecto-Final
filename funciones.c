@@ -57,19 +57,15 @@ void getString(char string[], int length){ //Funcion para leer strings de longit
 }
 
 void validNumData(float *data, float min, float max){ //Funcion para validar numeros flotantes, con un rango minimo y maximo
-    int flag=0;
-    float temp=0;
-    while(!flag){
-        if (scanf("%f", &temp)!=1){
+    while(1){
+        if (scanf("%f", data)!=1){
             while (getchar()!='\n');
             printf("Dato invalido, ingrese un numero entre %.2f y %.2f: ", min, max);
-        } else if (temp<min || temp>max){
-            while(getchar()!='\n')
+        } else if (*data<min || *data>max){
             printf("Dato invalido, ingrese un numero entre %.2f y %.2f: ", min, max);
-        } else flag=1;
+        } else break;
     }
     while(getchar()!='\n');
-    *data=temp;
 }
 
 void mayus(char *str) { //Funcion para convertir la primera letra de un string a mayuscula (ctype.h)
@@ -124,19 +120,19 @@ void getDiaActual(struct Info info, const char *filename){ //Funcion para obtene
     int op=0;
     while(1){
         printf("Ingrese la cantidad de CO2 en ppm: ");
-        validNumData(&info.co2, 0, 2000);
+        validNumData(&info.co2, 0.0, 2000.0);
         printf("Ingrese la cantidad de SO2 en ppb: ");
-        validNumData(&info.so2, 0, 2100);
+        validNumData(&info.so2, 0.0, 2100.0);
         printf("Ingrese la cantidad de NO2 en ppb: ");
-        validNumData(&info.no2, 0, 500);
+        validNumData(&info.no2, 0.0, 500.0);
         printf("Ingrese la cantidad de PM2.5 en ug/m3: ");
-        validNumData(&info.pm25, 0, 500);
+        validNumData(&info.pm25, 0.0, 500.0);
         printf("Ingrese la temperatura en grados Celsius: ");
-        validNumData(&info.temp, -10, 50);
+        validNumData(&info.temp, -10.0, 50.0);
         printf("Ingrese la velocidad del viento en km/h: ");
-        validNumData(&info.wind, 0, 50);
+        validNumData(&info.wind, 0.0, 50.0);
         printf("Ingrese la humedad en porcentaje: ");
-        validNumData(&info.hum, 0, 100);
+        validNumData(&info.hum, 0.0, 100.0);
         getDate(info.date);
         printf("\nLos siguientes datos son correctos?\n"
                 "CO2: %.1f ppm\n"
