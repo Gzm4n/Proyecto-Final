@@ -361,6 +361,7 @@ float predictZone(const char *filename, struct readData *data){ //Funcion para p
 
 void predictionAlerts(){ //Funcion para alertar si el indice de calidad del aire supera el limite de 200
     float api=0.0;
+    printf("Prediciendo los limites para cada zona...\n");
     for (int i=0; i<5; i++){
         api=predictZone(fileNames[i], &data);
         if (api>200){
@@ -368,7 +369,6 @@ void predictionAlerts(){ //Funcion para alertar si el indice de calidad del aire
                     "LA CALIDAD DEL AIRE SERA PELIGROSA PARA LA SALUD\n", zonas[i]);
         }
     }
-    printf("\nPara mas informacion, ingrese 3 en el progrrama\n");
 }
 
 void printPredict(int api, char zona[15], int index){ //Funcion para imprimir la prediccion del indice de calidad del aire de manana junto con sus recomendaciones divididas por zona
